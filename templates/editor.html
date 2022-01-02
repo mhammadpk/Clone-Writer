@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+      <meta name="description" content="A jQuery plugin to build a TEI editor with Codemirror">
+      <meta name="author" content="Alfredo Cosco">
+      <title>Clone-Writer</title>
+      <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+         -->
+      <!-- Bootstrap core CSS -->
+      <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}"  rel="stylesheet" />
+      <style>
+  #canvas-container {
+    overflow-x: auto;
+    overflow-y: visible;
+    position: relative;
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  .canvas {
+    display: block;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .canvas.hide {
+    display: none;
+  }
+
+  #html-canvas > span {
+    transition: text-shadow 1s ease, opacity 1s ease;
+    -webkit-transition: text-shadow 1s ease, opacity 1s ease;
+    -ms-transition: text-shadow 1s ease, opacity 1s ease;
+  }
+
+  #html-canvas > span:hover {
+    text-shadow: 0 0 10px, 0 0 10px #fff, 0 0 10px #fff, 0 0 10px #fff;
+    opacity: 0.5;
+  }
+
+/*canvas {
+  border: 1px dotted red;
+}
+*/
+.chart-holder {
+  position: relative;
+  margin: auto;
+  height: 80vh;
+  width: 80vw;
+}
+#chart-area2{
+  height: 500px;
+}
+
+	  #scroller {
+  overflow: auto;
+  height: 100%;
+}
+	  .disableScroll{
+      overflow-y:hidden;
+      overflow-x:hidden;
+}
+         .navbar{
+         margin-bottom:0;
+         min-height:auto;
+         }
+         /*This page style*/			
+         .pretty-pre {
+         background: #E5E5E5;
+         font-family: verdana;
+         padding-top:20px;
+         overflow: hidden;
+         width: 70%;
+         transition: width 0.9s;
+         }
+         .pretty-pre.expand:hover {
+         position: relative;
+         width: 100%;
+         z-index: 99;
+         transition: width 0.9s;
+         }
+         .CodeMirror { border: 1px solid silver; }
+         .CodeMirror-empty { outline: 1px solid #c22; }
+         .CodeMirror-empty.CodeMirror-focused { outline: none; }
+         /*.CodeMirror pre.CodeMirror-placeholder { color: #999; }*/
+         /*.CodeMirror-wrap pre { word-break: break-word;}	
+         .styled-background::before { content: "Read this: "; }*/		
+         .styled-background { background-color: #ff7; }		
+         note { 
+         background-color: #ff7;
+         border:1px solid red;
+         }		
+         .cm-styled-background { background-color: #ff7; }
+		  html, body, #container {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    }
+      </style>
+      <script src="{{ url_for('static', filename='js/jquery-2.2.4.min.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}" ></script>
+      <link rel="icon" href="{{ url_for('static', filename='images/clone.png') }}" />
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/docs.css') }}" />
+      <!--Codemirror CSS 5.49.1-->
+      <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/lib/codemirror.css') }}" />
+      <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/addon/hint/show-hint.css') }}" />
+      <!--CodeMirror 5.49.1-->
+      <script src="{{ url_for('static', filename='codemirror/lib/codemirror.js') }}"></script>
+      <script src="{{ url_for('static', filename='codemirror/addon/edit/matchbrackets.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/clike.js') }}"></script>
+      <script src="{{ url_for('static', filename='js/clone-writer.js') }}"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+      <script src="{{ url_for('static', filename='codemirror/addon/display/autorefresh.js') }}"></script>
+      <link rel="stylesheet" href="{{ url_for('static', filename='codemirror/addon/merge/merge.css') }}" />
+            <link rel="stylesheet" href="{{ url_for('static', filename='css/toastr.min.css') }}" />
+
+	  <script src="{{ url_for('static', filename='codemirror/addon/merge/merge.js') }}"></script>
+	  
+      <script src="{{ url_for('static', filename='js/diff.js') }}"></script>
+	        <script src="{{ url_for('static', filename='js/jsdiff.js') }}"></script>
+
+	        <script src="{{ url_for('static', filename='js/toastr.min.js') }}"></script>
+
+	        <script src="{{ url_for('static', filename='js/wordcloud2.js') }}"></script>
+	        <script src="{{ url_for('static', filename='js/tagcloud.js') }}"></script>
+
+	<!--        <script src="{{ url_for('static', filename='js/scattterplot.js') }}"></script>
+
+
+
+
+	        <script src="{{ url_for('static', filename='js/require.js') }}"></script>
+
+	        <script src="{{ url_for('static', filename='js/go.js') }}"></script>
+
+	        <script src="{{ url_for('static', filename='js/Quadtree.js') }}"></script>
+
+	        <script src="{{ url_for('static', filename='js/PackedLayout.js') }}"></script>
+
+	        <script src="{{ url_for('static', filename='js/goSamples.js') }}"></script>
+-->
+ <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-tag-cloud.min.js"></script>
+      <script src="{{ url_for('static', filename='codemirror/addon/hint/show-hint.js') }}"></script>
+	  
+      <style>
+	  #appLoader {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background: url("/static/images/loader.gif") no-repeat center center #344357;
+    z-index: 200;
+    opacity: 0.7;
+    display: none;
+}
+         * {box-sizing: border-box;}
+         body {
+         margin: 0;
+         font-family: Arial, Helvetica, sans-serif;
+         }
+         .topnav {
+         overflow: hidden;
+         background-color: #e9e9e9;
+         }
+         .topnav a {
+         float: left;
+         display: block;
+         color: black;
+         text-align: center;
+         padding: 14px 16px;
+         text-decoration: none;
+         font-size: 17px;
+         }
+         .topnav a:hover {
+         background-color: #ddd;
+         color: black;
+         }
+         .topnav a.active {
+         background-color: #2196F3;
+         color: white;
+         }
+         .topnav .search-container {
+         float: right;
+         }
+         .topnav input[type=text] {
+         padding: 6px;
+         margin-top: 8px;
+         font-size: 17px;
+         border: none;
+         }
+         .topnav .search-container button {
+         float: right;
+         padding: 6px 10px;
+         margin-top: 8px;
+         margin-right: 16px;
+         background: #ddd;
+         font-size: 17px;
+         border: none;
+         cursor: pointer;
+         }
+         .topnav .search-container button:hover {
+         background: #ccc;
+         }
+         @media screen and (max-width: 600px) {
+         .topnav .search-container {
+         float: none;
+         }
+         .topnav a, .topnav input[type=text], .topnav .search-container button {
+         float: none;
+         display: block;
+         text-align: left;
+         width: 100%;
+         margin: 0;
+         padding: 14px;
+         }
+         .topnav input[type=text] {
+         border: 1px solid #ccc;  
+         }
+         }
+         .div-left{
+         float:left;
+         padding-left:10px;
+         }
+         .div-right{
+         float:right;
+         padding-right:10px;
+         }
+         .checkBx{
+         margin-right: 4px !important;
+         }
+         .footer-container{
+         height:40px;
+         max-width:980px;
+         border:1px solid salmon;
+         padding-top:5px;
+         }
+         .footer {
+         height:30px;
+         line-height:30px;
+         }
+         .footer li {
+         list-style-type:none;
+         float:left;
+         padding-left:10px;
+         }
+         .footer a {
+         text-decoration:none;
+         color:#0088CC;
+         }
+         /*.footer li:nth-child(1) {
+         text-decoration:none;
+         height:30px;
+         display:block;
+         background-image:url('http://s7.postimg.org/w0nt224pj/bc_separator.png');
+         background-repeat:no-repeat;
+         background-position:right;
+         padding-right: 15px;
+         }*/
+         ul {
+         list-style-type:none;
+         padding:0px;
+         margin:0px;
+         }
+      </style>
+   </head>
+   <body class="disableScroll"  style="height:100%;">
+               <div id="appLoader"></div>
+
+      <nav class="navbar navbar-inverse navbar-fixed-top">
+         <div class="">
+            <div class="navbar-header" style="width=100%">
+               <div id="buttons-panel" class="btn-group" style="width=100%">
+                  <div class="div-left">
+                     <ul class="footer">
+                        <li>
+						<!--<span class="glyphicon glyphicon-asterisk"></span>-->
+                           <a class="btn" style="color: white;" title="formatting" onclick="autoFormatSelection()"><img src="/static/images/format.png" style="width:16px;height:20px;" alt="Avatar" class="image"><label style="margin-left: 5px;font-size: 11px;"> Formatting</label></a>
+						   
+						   
+						   <a class="btn" style="color: white;" title="predictClones" onclick="performClonePrediction()"><img src="/static/images/prediction.png" style="width:22px;height:20px;" alt="Avatar" class="image"><label style="margin-left: 5px;font-size: 11px;"> Prediction</label></a>
+                           <a class="btn" style="color: white;" title="searching" data-toggle="modal" data-target="#searchView"><span class="fa fa-search"></span><label style="margin-left: 5px;font-size: 11px;"> Searching</label></a>						
+                           <a class="btn" style="color: white;" title="side by side comparison" data-target="#mergeView" data-toggle="modal"><img src="/static/images/diff7.jpg" style="width:20px;height:20px;" alt="Avatar" class="image"><label style="margin-left: 5px;font-size: 11px;">Code Inspection View</label></a>
+						  <!-- <a class="btn" style="color: white;" title="single mode comparison" data-target="#singleModeComparision" data-toggle="modal"><img src="/static/images/singlediff.png" style="width:21px;height:20px;" alt="Avatar" class="image"><label style="margin-left: 5px;font-size: 11px;">Single Mode Diff</label></a>
+						   -->
+						   <!--<a class="btn" style="color: white;" title="scatterPlot View" onclick="scatterPlot()"><span class="fa fa-globe"></span></a>
+						    onclick="similarityPlot()"  data-target="#scatterPlotView"-->
+						   <a class="btn" style="color: white;" title="similarityPlot View" data-toggle="modal"  onclick="getSimilarityValues()"><img src="/static/images/simplot.png" style="width:16px;height:20px;" alt="Avatar" class="image"><label style="margin-left: 5px;font-size: 11px;">Scatter Plot</label></a>
+						   <!--<a class="btn" style="color: white;" title="tagCloud View" onclick="tagCloud()"><span class="fa fa-paper-plane"></span></a>-->
+						   <a class="btn" style="color: white;" title="settings" data-toggle="modal" data-target="#settingsView"><span class="glyphicon glyphicon-cog"></span><label style="margin-left: 5px;font-size: 11px;"> Settings</label></a>
+						   
+                     </ul>
+                  </div>				
+               </div>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+               <div class="nav scrollnav navbar-nav buttons-nav">
+               </div>
+               <div class="navbar-right" style="margin-right:80px">
+                  <a class="nav-brand" href="index.html" title="CodemirrorXML4TEI"></a>
+               </div>
+            </div>
+         </div>
+      </nav>
+	  <!--import com.demo.util.MyType;
+               import com.demo.util.MyInterface;
+               public enum Enum {
+               VAL1, VAL2, VAL3
+               }
+               public class Class<T, V> implements MyInterface {
+               public static final MyType<T, V> member;
+               private class InnerClass {
+               public int zero() {
+               return 0;
+               }
+               }
+               @Override
+               public MyType method() {
+               return member;
+               }
+               public void method2(MyType<T, V> value) {
+               method();
+               value.method3();
+               member = value;
+               }
+               }-->
+      <div id="editors-container"  style="height:100%;">
+      <div class="tab-content" style="height:100%;">
+         <div class="col-md-8 col-sm-2 col-xs-12" style="padding-top: 50px;">
+            <div id="teiHeaderTab" class="tab-pane fade in active">	
+               <textarea id="java-code" name="teiHeader" cols="10" data-xmlschema="teischemas/cm-tei-teiHeader-schema.xml">/*write code below*/
+               
+               </textarea>
+            </div>
+         </div>
+         <div id="scroller" class="col-md-4 col-sm-2 col-xs-12"  style="padding-top: 50px; overflow:auto;">
+            <article id="recommendWindows">
+			<!--
+               <h3 value="1"><input class="checkBx" type="checkbox" /> 
+			
+				<a class="btn" style="color: white;" title="tagcloud">
+				<img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud(1)"></a>
+
+			   Recommendation 1</h3>
+               <div><textarea id="recommend-code1">
+                  </textarea>
+               </div>
+               <h3 value="2"><input class="checkBx" type="checkbox" />
+			   				<a class="btn" style="color: white;" title="tagcloud"><img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud(2)"></a>
+
+			   Recommendation 2
+
+			   </h3>
+               <div><textarea id="recommend-code2" >
+                  </textarea>
+               </div>
+               <h3 value="3"><input class="checkBx" type="checkbox" />
+			   
+			   				<a class="btn" style="color: white;" title="tagcloud"><img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud(3)"></a>
+
+			   Recommendation 3
+			   
+			   </h3>
+               <div><textarea id="recommend-code3" >
+                  </textarea>
+               </div>
+               <h3 value="4"><input class="checkBx" type="checkbox" />
+			   
+			   				<a class="btn" style="color: white;" title="tagcloud"><img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud(4)"></a>
+
+			   Recommendation 4</h3>
+               <div><textarea id="recommend-code4" >
+                  </textarea>
+               </div>
+               <h3 value="5"><input class="checkBx" type="checkbox" />
+			   
+			   				<a class="btn" style="color: white;" title="tagcloud"><img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud(5)"></a>
+
+			   Recommendation 5</h3>
+               <div><textarea id="recommend-code5" >
+                  </textarea>
+               </div>
+               <h3 value="6"><input class="checkBx" type="checkbox" />
+			   				<a class="btn" style="color: white;" title="tagcloud"><img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud(6)"></a>
+
+			   Recommendation 6</h3>
+               <div><textarea id="recommend-code6" >
+                  </textarea>
+               </div>-->
+            </article>
+         </div>
+      </div>
+      </div>
+	  <!-- Modal -->
+      <div id="singleModeComparision" class="modal fade" role="dialog">
+         <!--<div class="modal-dialog" style="width:1100px !important;">
+            <div class="modal-content">
+               <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Single Mode Comparison</h4>
+               </div>
+               <div class="modal-body">
+                  <pre id="singleModeId"></pre>
+
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>-->
+      </div>
+	  <!-- Modal -->
+      <div id="mergeView" class="modal fade" role="dialog">
+         <div class="modal-dialog" style="width:1250px !important;">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Code Inspection View</h4>
+               </div>
+               	
+				<div class="form-group" style="height:20px;margin-top:15px;">
+				<label for="diffType" class="col-sm-2 control-label">View Type </label>
+				<div class="col-sm-10">
+					<select class="form-control" name="diffType" id="diffType" onchange="changeDiffView()">
+						<option value="SidebySide" selected>Side by side</option>
+						<option value="Unified">Unified representation</option>
+					</select>
+				 </div>
+				</div>
+		
+			   
+			   <div class="modal-body">
+                  <div id="mergeWindow">
+                  </div>
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      
+	  
+	  <!-- Modal -->
+      <div id="tagCloudView" class="modal fade" role="dialog">
+         <div class="modal-dialog" style="width:1100px !important;">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Tag Cloud View</h4>
+               </div>
+               <div id="parent-container" class="modal-body">
+			      <div id="container"></div>
+
+                   <!-- <div id="myDiagramDiv" style="border: solid 1px black; width:100%; height:500px"></div>
+							<div class="span12" id="canvas-container">
+					  <canvas id="canvas" class="canvas"></canvas>
+					  <div id="html-canvas" class="canvas hide"></div>
+			</div>   -->     
+	
+					 <!-- <canvas id="my_canvas" class="canvas" width="1170" height="760"></canvas>
+-->
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      
+	 
+
+	  <!-- Modal -->
+      <div id="scatterPlotView" class="modal fade" role="dialog">
+         <div class="modal-dialog" style="width:1100px !important;">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Scatter Plot</h4>
+               </div>
+               <div id="parent-container" class="modal-body">
+			      
+							
+							<div id="similarityPlotView" class="canvas-holder">
+								<canvas id="chart-area2"></canvas>
+					</div>
+                   <!-- <div id="myDiagramDiv" style="border: solid 1px black; width:100%; height:500px"></div>
+							<div class="span12" id="canvas-container">
+					  
+					  <div id="html-canvas" class="canvas hide"></div>
+			</div>   -->     
+	
+					 <!-- <canvas id="my_canvas" class="canvas" width="1170" height="760"></canvas>
+-->
+               </div>
+               <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      	  
+	  <!-- Modal -->
+      <div id="settingsView" class="modal fade" role="dialog">
+         <div class="modal-dialog" style="width:1100px !important;">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Settings</h4>
+               </div>
+               <div class="modal-body">
+			   
+					   <form>
+				  <div class="form-group" style="display:none;">
+					<label for="recipient-name" class="col-form-label">No of User Context Tokens:</label>
+					<input type="text" class="form-control" id="tokensId" value="20">
+				  </div>
+				  <div class="form-group" style="display:none;">
+					<label for="topId" class="col-form-label">Top-p:</label>
+					<input type="range" class="form-control" id="topId"  onInput="$('#rangeval').html($(this).val())" value="0.95" min="0" max="1.0" step="0.05">
+					<span id="rangeval">0.95<!-- Default value --></span>
+				  </div>
+				<div class="form-group">
+					<!--
+					<input type="range" class="form-control" id="K-value"  onInput="$('#rangeval2').html($(this).val())" value="1" min="1" max="10" step="1">
+					<span id="rangeval2">1</span>
+					
+					<ul class="dropdown-menu">
+					  <li>1</li>
+					  <li>2</li>
+					  <li><a href="#">JavaScript</a></li>
+					</ul>-->
+					<label for="K-value" class="col-form-label">K-value (retreive the k-most similar clone methods):</label>
+					<input id="k-value" type="number"  class="form-control"  value="5" />
+
+				  </div>
+			   </form>
+				
+               </div>
+              <!-- <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary"  onclick="saveSettings()">Save</button>
+               </div>-->
+            </div>
+         </div>
+      </div>
+      
+	  
+	  <!-- Modal -->
+      <div id="searchView" class="modal fade" role="dialog">
+         <div id="searchModel" class="modal-dialog" style="width:1100px !important;">
+            <!-- Modal content-->
+            <div class="modal-content">
+               <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Clone-Seeker (Clone Search)</h4>
+               </div>
+               <div class="modal-body">
+                  <!--<input type="radio" id="swal-input5" name="searchMethod" value="code"><label for="code"  style="margin-left: 6px;">Code</label>
+                  <input type="radio" id="swal-input6" name="searchMethod" value="text" style="margin-left:20px;"><label for="text" style="margin-left: 6px;">Text</label>
+				-->
+				<div class="form-group" style="height:30px;">
+				<label for="searchType" class="col-sm-2 control-label"> Search Type </label>
+				<div class="col-sm-10">
+					<select class="form-control" name="searchType" id="searchType">
+						<option value="Text">Text</option>
+						<option value="Code">Code</option>
+					</select>
+				 </div>
+				</div>
+				
+				<div class="form-group" style="height:30px;">
+				<label for="methodType" class="col-sm-2 control-label"> Annotation Strategy </label>
+				<div class="col-sm-10">
+					<select class="form-control" name="methodType" id="methodType">
+						<option value="Baseline">Baseline</option>
+						<option value="Manual">Manual</option>
+						<option value="Automatic">Automatic</option>
+					</select>
+				 </div>
+				</div>
+				
+				
+				
+				<div class="form-group">
+				<label for="searchtext" class="col-sm-2 control-label"> Search Content </label>
+
+                  <textarea id="searchtext" style="margin: 0px; width: 1058px; height: 200px;"></textarea>		  
+				</div>
+
+               </div>
+               <div  class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary"  onclick="getCloneSeekerRecommendations()">Search</button>
+               </div>
+            </div>
+         </div>
+      </div>
+	  
+      <!-- /container --- <a href="https://github.com/orazionelson/CodeMirrorXML4TEI">https://github.com/orazionelson/CodeMirrorXML4TEI</a>-->
+      <footer class="navbar text-center" style="font-size:12px;border-top:1px solid #000; position:fixed;right: 0;left: 0;z-index: 1030;bottom:0;background-color:#ccc">
+         <p style="padding-top:10px;">&copy;Clone-Writer 2021 <a href="https://github.com/mhammadpk">https://github.com/mhammadpk</a> m.hammad[AT]tue.nl</p>
+      </footer>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.2.0/sweetalert2.min.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.2.0/sweetalert2.all.min.js"></script>
+      <script type="text/javascript" src="https://codemirror.net/2/lib/util/formatting.js"></script> 
+      <script>
+	  
+	  var limit = 3;
+		$('.checkBx').on('change', function(evt) {
+		   if($('.checkBx:checkbox:checked').length >=limit){
+			   this.checked = false;
+			   toastr["warning"]("only two selection is allowed");
+		   }
+		});
+function setCanvas() {
+	  
+	  var $form = $('#form');
+  var $canvas = $('#canvas');
+  var $htmlCanvas = $('#html-canvas');
+  var $canvasContainer = $('#canvas-container');
+  var $loading = $('#loading');
+
+  var $list = $('#input-list');
+  var $options = $('#config-option');
+  var $width = $('#config-width');
+  var $height = $('#config-height');
+  var $mask = $('#config-mask');
+  var $dppx = $('#config-dppx');
+  var $css = $('#config-css');
+  var $webfontLink = $('#link-webfont');
+/*
+  if (!WordCloud.isSupported) {
+    $('#not-supported').prop('hidden', false);
+    $form.find('textarea, input, select, button').prop('disabled', true);
+    return;
+  }
+
+  var $box = $('<div id="box" hidden />');
+  $canvasContainer.append($box);
+  window.drawBox = function drawBox(item, dimension) {
+    if (!dimension) {
+      $box.prop('hidden', true);
+
+      return;
+    }
+
+    var dppx = $dppx.val();
+
+    $box.prop('hidden', false);
+    $box.css({
+      left: dimension.x / dppx + 'px',
+      top: dimension.y / dppx + 'px',
+      width: dimension.w / dppx + 'px',
+      height: dimension.h / dppx + 'px'
+    });
+  };
+
+  // Update the default value if we are running in a hdppx device
+  if (('devicePixelRatio' in window) &&
+      window.devicePixelRatio !== 1) {
+    $dppx.val(window.devicePixelRatio);
+  }
+*/
+// devicePixelRatio
+    var devicePixelRatio = parseFloat(300);//$dppx.val());
+
+    // Set the width and height
+    var width = $width.val() ? $width.val() : $('#canvas-container').width();
+    var height = $height.val() ? $height.val() : Math.floor(width * 0.65);
+    var pixelWidth = width;
+    var pixelHeight = height;
+
+    if (devicePixelRatio !== 1) {
+      $canvas.css({'width': width + 'px', 'height': height + 'px'});
+
+      pixelWidth *= devicePixelRatio;
+      pixelHeight *= devicePixelRatio;
+    } else {
+      $canvas.css({'width': '', 'height': '' });
+    }
+
+    $canvas.attr('width', pixelWidth);
+    $canvas.attr('height', pixelHeight);
+
+    $htmlCanvas.css({'width': pixelWidth + 'px', 'height': pixelHeight + 'px'});
+	  }
+	  
+	  function changeDiffView(){
+			if($('.checkBx:checkbox:checked').length==2){
+				var editValue=$($('.checkBx:checkbox:checked')[0]).parent().attr("value");
+
+				var editor=recomendEditorList[editValue-1]//window["recomendEditor"+editValue];
+
+
+				orignal=editor.getValue();
+				var editValue2=$($('.checkBx:checkbox:checked')[1]).parent().attr("value");
+				
+				var editor2=recomendEditorList[editValue2-1]//window["recomendEditor"+editValue2];
+				compareTo=editor2.getValue();
+			
+			var diffType=$("#diffType option:selected").text();
+			if (diffType=="Side by side"){
+				var target = document.getElementById("mergeWindow");
+				   target.innerHTML = "";
+				   mergeEditor = CodeMirror.MergeView(target, {
+					 value: orignal,
+					 origLeft: null,
+					 orig: compareTo,
+					 lineNumbers: true,
+					 mode: "text/x-java",
+					 highlightDifferences: true,
+					 connect: 'align',
+					 collapseIdentical: false,
+					showDifferences:true,
+					lineWrapping: true
+				   });
+			}
+			else{
+			
+			var color = '',
+					span = null;
+
+				var diff = JsDiff.diffChars(orignal, compareTo);
+			    var display = document.getElementById('mergeWindow');
+				var	fragment = document.createDocumentFragment();
+
+				diff.forEach(function(part){
+				  // green for additions, red for deletions
+				  // grey for common parts
+				  color = part.added ? 'green' :
+					part.removed ? 'red' : 'grey';
+				  span = document.createElement('span');
+				  span.style.color = color;
+				  span.appendChild(document
+					.createTextNode(part.value));
+				  fragment.appendChild(span);
+				});
+				$(display).children().remove();
+
+				$(display).append('<pre id="singleModeId"></pre>');
+						
+				var	singleMode = document.getElementById('singleModeId');
+				singleMode.appendChild(fragment);
+				//display.appendChild(fragment);				
+				
+			}
+
+			
+			
+			}
+	  }
+	  // returns a map (word -> frequency) of words in the text
+		function wordFreq(str) {
+			var words = str.toString().replace(/[.]/g, '').split(/\s/);
+			var freqMap = {};
+			words.forEach(function(w) {
+				if (!freqMap[w]) {
+					freqMap[w] = 0;
+				}
+				freqMap[w] += 1;
+			});
+		/*
+var data = [
+    {"x": "Mandarin chinese", "value": 1090000000},
+    		*/
+			var arr = [];
+
+			for (var key in freqMap) {
+				if (freqMap.hasOwnProperty(key)) {
+					arr.push( {"x":key,"value":freqMap[key]});
+					//[ key, freqMap[key] ] );
+					//arr.push( [ key, freqMap[key] ] );
+				}
+			}
+			
+			return arr;//freqMap;
+		}
+	  function showTagCloud(editNo){
+		$('#tagCloudView').modal('toggle');
+		
+		 	//rebuildGraph();
+			var list=wordFreq(identifierList[editNo-1]);//[['foo', 12], ['bar', 6]];
+			showCloudView(list);
+				
+				
+		//WordCloud(document.getElementById('canvas'), { list: list } );
+			//setCanvas();
+	 }
+	  
+	  var dictionary;
+
+         $('#mergeView').on('show.bs.modal', function () {
+			setTimeout(function(){ showDifferences(); }, 200);
+         });
+
+		/*$('#scatterPlotView').on('show.bs.modal', function () {
+			setTimeout(function(){ showDifferences(); }, 200);
+         });
+*/
+         $('#singleModeComparision').on('show.bs.modal', function () {
+			setTimeout(function(){ performSingleModeComparison(); }, 200);
+         });
+		 
+         function performSingleModeComparison(){
+					/*var one = 'beep boop',
+					other = 'beep boob blah',*/
+			
+			if($('.checkBx:checkbox:checked').length==2){
+				var editValue=$($('.checkBx:checkbox:checked')[0]).parent().attr("value");
+
+				var editor=recomendEditorList[editValue-1]//window["recomendEditor"+editValue];
+
+
+				orignal=editor.getValue();
+				var editValue2=$($('.checkBx:checkbox:checked')[1]).parent().attr("value");
+				
+				var editor2=recomendEditorList[editValue2-1]//window["recomendEditor"+editValue2];
+				compareTo=editor2.getValue();
+
+
+			var color = '',
+					span = null;
+
+				var diff = JsDiff.diffChars(orignal, compareTo);
+				//
+				//var	display = document.getElementById('singleModeId');
+				var	display = document.getElementById('mergeWindow');
+				var	fragment = document.createDocumentFragment();
+
+				diff.forEach(function(part){
+				  // green for additions, red for deletions
+				  // grey for common parts
+				  color = part.added ? 'green' :
+					part.removed ? 'red' : 'grey';
+				  span = document.createElement('span');
+				  span.style.color = color;
+				  span.appendChild(document
+					.createTextNode(part.value));
+				  fragment.appendChild(span);
+				});
+				
+				display.append('<pre id="singleModeId"></pre>');
+						
+				var	singleMode = document.getElementById('singleModeId');
+				singleMode.appendChild(fragment);
+			}
+			}
+         	  var mergeEditor;
+			  
+         	  function autoFormatSelection() {
+                 //var range = getSelectedRange();
+         		var totalLines = mainEditor.lineCount();  
+                 mainEditor.autoFormatRange({line:0, ch:0}, {line:totalLines});//range.from, range.to);
+               }
+			  function showDifferences(){         		
+		   if($('.checkBx:checkbox:checked').length==2){
+				var editValue=$($('.checkBx:checkbox:checked')[0]).parent().attr("value");
+
+				var editor=recomendEditorList[editValue-1]//window["recomendEditor"+editValue];
+
+
+				orignal=editor.getValue();
+				var editValue2=$($('.checkBx:checkbox:checked')[1]).parent().attr("value");
+				
+				var editor2=recomendEditorList[editValue2-1]//window["recomendEditor"+editValue2];
+				compareTo=editor2.getValue();
+			
+			var diffType=$("#diffType option:selected").text();
+			if (diffType=="Side by side"){
+				var target = document.getElementById("mergeWindow");
+				   target.innerHTML = "";
+				   mergeEditor = CodeMirror.MergeView(target, {
+					 value: orignal,
+					 origLeft: null,
+					 orig: compareTo,
+					 lineNumbers: true,
+					 mode: "text/x-java",
+					 highlightDifferences: true,
+					 connect: 'align',
+					 collapseIdentical: false,
+					showDifferences:true,
+					lineWrapping: true
+				   });
+			}
+			else{
+			
+			var color = '',
+					span = null;
+
+				var diff = JsDiff.diffChars(orignal, compareTo),
+					display = document.getElementById('mergeWindow'),
+					fragment = document.createDocumentFragment();
+
+				diff.forEach(function(part){
+				  // green for additions, red for deletions
+				  // grey for common parts
+				  color = part.added ? 'green' :
+					part.removed ? 'red' : 'grey';
+				  span = document.createElement('span');
+				  span.style.color = color;
+				  span.appendChild(document
+					.createTextNode(part.value));
+				  fragment.appendChild(span);
+				});
+    			$(display).children().remove();
+
+				$(display).append('<pre id="singleModeId"></pre>');
+						
+				var	singleMode = document.getElementById('singleModeId');
+				singleMode.appendChild(fragment);
+				
+			}
+
+		   }
+		   }
+         // Register our custom Codemirror hint plugin.
+         CodeMirror.registerHelper('hint', 'dictionaryHint', function(editor) {
+         		editor=mainEditor;
+				//dictionary=['abc','abcd','ae','ax','efg','hij'];//result.tokens;//
+				var cur = editor.getCursor();
+				var curLine = editor.getLine(cur.line);
+				var start = cur.ch;
+				var end = start;
+				while (end < curLine.length && /[\w$]/.test(curLine.charAt(end))) ++end;
+				while (start && /[\w$]/.test(curLine.charAt(start - 1))) --start;
+				var curWord = start !== end && curLine.slice(start, end);
+				var regex = new RegExp('^' + curWord, 'i');
+				
+				return {
+					list: dictionary,/* (!curWord ? [] : dictionary.filter(function(item) {
+						return item.match(regex);
+					})).sort(), */////dictionary,
+					from: CodeMirror.Pos(cur.line, start+10),
+					to: CodeMirror.Pos(cur.line, end)
+					};
+         });
+
+
+function performClonePrediction(){
+	var code=getCodeTillCursor();
+	getPredictedClones(code,0);
+}
+         	  
+//display code search results
+function getPredictedTokens(CodeMirror,cm){
+	var code="";
+	if(mainEditor.getSelection()==""){
+	code=getCodeTillCursor();
+	
+	}
+	else{
+	code=mainEditor.getSelection();
+	}
+	var topp=0.95;//$('#topId').val();
+	var tokenSize=$('#tokensId').val()
+
+	  	 $.ajax({
+			type : 'POST',
+			url : '/getTop10PredictionedTokens',
+			data : {
+				inputString : code,
+				topp:topp,
+				tokenSize:tokenSize
+				},
+			success: function (result) {
+				editor=mainEditor;
+				dictionary=result.tokens;
+				CodeMirror.showHint(cm, CodeMirror.hint.dictionaryHint);
+			},
+			error: function (error) {
+				console.log(error);
+				$('#searchView').modal('toggle');
+		}
+		});
+		
+		
+}
+         CodeMirror.commands.autocomplete = function(cm) {				
+			getPredictedTokens(CodeMirror,cm);
+             //CodeMirror.showHint(cm, CodeMirror.hint.dictionaryHint);//CodeMirror.hint.dictionaryHint);
+         };
+         	  function openSettings(){
+         swal({
+           title: 'Settings',
+           confirmButtonText:
+             '<i class="fa fa-thumbs"></i> Apply!',
+           html:
+             '<label>No of Code Tokens</label><input id="swal-input1" class="swal2-input">' +
+             '<label>Top-p</label><input id="swal-input2" class="swal2-input">'+
+         	'<label>No of DeepClone Tokens</label><input id="swal-input3" class="swal2-input">',
+           preConfirm: function () {
+             return new Promise(function (resolve) {
+               resolve([
+                 $('#swal-input1').val(),
+                 $('#swal-input2').val(),
+         		        $('#swal-input3').val()
+         
+               ])
+             })
+           },
+           onOpen: function () {
+             $('#swal-input1').focus()
+           }
+         }).then(function (result) {
+           swal(JSON.stringify(result))
+         }).catch(swal.noop);
+         }
+         
+         function cloneseeker(){
+         
+         swal({
+           title: 'Settings',
+           confirmButtonText:
+             '<i class="fa fa-thumbs"></i> Apply!',
+           html:
+           '<input type="radio" id="swal-input5" name="searchMethod" value="code"  class="swal2-input"><label for="code">Code</label>'+
+         	'<input type="radio" id="swal-input6" name="searchMethod" value="text"  class="swal2-input"><label for="text">Text</label>'+
+         	'<textarea id="swal-input7" class="swal2-input"></textarea>',
+         	
+         
+           preConfirm: function () {
+             return new Promise(function (resolve) {
+               resolve([
+                 $('#swal-input5').val(),
+                 $('#swal-input6').val(),
+         		        $('#swal-input7').val()
+         
+               ])
+             })
+           },
+           onOpen: function () {
+             $('#swal-input5').focus()
+           }
+         }).then(function (result) {
+           swal(JSON.stringify(result))
+         }).catch(swal.noop);
+         }
+         
+         	$('#k-value').on('input', function () {
+    
+					var value = this.value;
+					
+					if (value !== '') {
+						value = parseInt(value);
+						
+						if (value < 1)
+							this.value = 1;
+						else if (value > 10)
+							this.value = 10;
+						else
+							this.value=value;
+					}
+    
+			});
+     		displayMainWindowContent();////First time only reuire for
+			createRecommendWindows();
+
+			function createRecommendWindows(){
+				var kval=$('#k-value').val();
+				
+						recomendEditorList=[]
+						recommendLabelsList=[]
+						
+				for (var i=0;i<kval;i++){
+					var indexVal=i+1;
+					$('#recommendWindows').append('<div><h3 value='+indexVal+'><input class="checkBx" type="checkbox" /> <a class="btn" style="color: white;" title="tagcloud"><img src="/static/images/wordcloud.png" style="height:16px;vertical-align: top !important;" onclick="showTagCloud('+(i+1)+')"></a>Recommendation (R'+indexVal+')</h3><div><textarea id="recommend-code'+indexVal+'"></textarea></div></div>');
+					recommendLabelsList.push("R"+indexVal);
+				}
+						var KValue=$('#k-value').val();
+						for (var i=0;i<KValue;i++){
+							var recommendEditor=CodeMirror.fromTextArea(document.getElementById("recommend-code"+(i+1)), {
+											lineNumbers: true,
+											matchBrackets: true,
+											mode: "text/x-java"
+										  });			  
+								recomendEditorList.push(recommendEditor);
+								
+						}
+
+			}
+      </script>
+   </body>
+</html>
