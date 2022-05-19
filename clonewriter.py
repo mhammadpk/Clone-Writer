@@ -104,7 +104,7 @@ def getRecommendations():
         selectedTokens=tokens[:-tokenSize]
     else:
         selectedTokens=tokens
-    print(selectedTokens)
+    
     inputSample = " ".join(selectedTokens) + " <soc>"
 
     clonesnippet = getModelClone(inputSample, model, tokenizer,topp)
