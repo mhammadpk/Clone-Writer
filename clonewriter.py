@@ -202,11 +202,8 @@ def getModelClone(sample, model, tokenizer,topp):
             # Remove all text after the stop token
             text3 = text[: text.find('<eoc>') if '<eoc>' else None]
             text4 = text3 + "<eoc>"
-            if text4.find('<soc>') > 0:
-                clonesnippet = text4[text4.find('<soc>'):]
-                return clonesnippet
-            else:
-                return ""
+            clonesnippet = text4[text4.find('<soc>'):]
+            return clonesnippet
 
 ##################################Clone-Seeker###############
 
