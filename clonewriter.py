@@ -178,7 +178,7 @@ def getModelClone(sample, model, tokenizer,topp):
         max_length=50 + len(encoded_prompt[0]),
         temperature=1.0,
         top_p=topp,
-        repetition_penalty=1,  # args.repetition_penalty,
+        repetition_penalty=1,
         do_sample=True,
         num_return_sequences=1,
         pad_token_id=tokenizer.pad_token_id,
@@ -199,7 +199,6 @@ def getModelClone(sample, model, tokenizer,topp):
         if (text.find('<eoc>') ==-1):
             return text
         else:
-            # Remove all text after the stop token
             text3 = text[: text.find('<eoc>') if '<eoc>' else None]
             text4 = text3 + "<eoc>"
             clonesnippet = text4[text4.find('<soc>'):]
