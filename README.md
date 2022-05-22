@@ -10,7 +10,10 @@ This webpage contains the code and its documentation described in paper "Clone-W
 <br>
 <br>
 
-Installation and User Guide is available from <a href="https://www.win.tue.nl/~mhammad/Clone-Writer/UserGuideCloneWriter.pdf">this link</a>.
+Installation and user guide is available from <a href="https://www.win.tue.nl/~mhammad/Clone-Writer/UserGuideCloneWriter.pdf">this link</a>.
+
+Tool demonstration video is available from <a href="https://www.win.tue.nl/~mhammad/Clone-Writer/CloneWriterVideo.mp4">this link</a>.
+
 
 Clone-Writer tool is dependent  upon the following set of papers:
 
